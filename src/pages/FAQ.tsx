@@ -92,15 +92,14 @@ const FAQ = () => {
               {faqs.map((faq, i) => (
                 <motion.div
                   key={i}
-                  initial={{ opacity: 0, scale: 0.85, rotateX: 8 }}
-                  whileInView={{ opacity: 1, scale: 1, rotateX: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.05, duration: 0.4 }}
-                  style={{ transformPerspective: 800 }}
+                  initial={{ opacity: 0, y: 30, scale: 0.95, filter: "blur(4px)" }}
+                  whileInView={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+                  viewport={{ once: true, margin: "-50px" }}
+                  transition={{ delay: i * 0.08, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
                 >
                   <AccordionItem
                     value={`faq-${i}`}
-                    className="glass-card bg-card/70 backdrop-blur-2xl px-6 border-glass-border shimmer-card"
+                    className="glass-card bg-card/40 backdrop-blur-3xl px-6 border-glass-border shimmer-card hover:bg-card/70 hover:border-primary/30 transition-all duration-300"
                   >
                     <AccordionTrigger className="text-left font-heading text-foreground hover:text-primary py-5">
                       {faq.q}

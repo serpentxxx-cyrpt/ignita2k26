@@ -14,6 +14,8 @@ const navLinks = [
   { label: "About", href: "/about" },
   { label: "Events", href: "/events" },
   { label: "Schedule", href: "/schedule" },
+  { label: "Team", href: "/team" },
+  { label: "Gallery", href: "/gallery" },
   { label: "Sponsors", href: "/sponsors" },
   { label: "FAQ", href: "/faq" },
   { label: "Contact", href: "/contact" },
@@ -99,7 +101,7 @@ const Navbar = () => {
           </motion.span>
         </Link>
 
-        <div className="hidden md:flex items-center gap-8">
+        <div className="hidden lg:flex items-center gap-6">
           {navLinks.map((link) => (
             <Link
               key={link.href}
