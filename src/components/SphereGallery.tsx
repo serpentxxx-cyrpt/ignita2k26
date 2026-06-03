@@ -53,11 +53,30 @@ const CONFIG: SphereConfig = {
 };
 
 export default function SphereGallery() {
+  const [windowWidth, setWindowWidth] = React.useState(typeof window !== "undefined" ? window.innerWidth : 1200);
+
+  React.useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener("resize", handleResize);
+    handleResize(); // Call once to ensure correct sizing on mount
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const isMobile = windowWidth < 768;
+  const isTablet = windowWidth >= 768 && windowWidth < 1024;
+
+  const dynamicConfig = {
+    ...CONFIG,
+    containerSize: isMobile ? 340 : isTablet ? 600 : CONFIG.containerSize,
+    sphereRadius: isMobile ? 140 : isTablet ? 220 : CONFIG.sphereRadius,
+    baseImageScale: isMobile ? 0.14 : isTablet ? 0.12 : CONFIG.baseImageScale,
+  };
+
   return (
-    <div className="w-full p-6 flex justify-center items-center">
+    <div className="w-full p-2 md:p-6 flex justify-center items-center overflow-hidden">
       <SphereImageGrid
         images={IMAGES}
-        {...CONFIG}
+        {...dynamicConfig}
       />
     </div>
   );

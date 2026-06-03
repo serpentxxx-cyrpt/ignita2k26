@@ -637,7 +637,7 @@ const SphereImageGrid: React.FC<SphereImageGridProps> = ({
 
       <div
         ref={containerRef}
-        className={`relative select-none cursor-grab active:cursor-grabbing ${className}`}
+        className={`relative mx-auto select-none cursor-grab active:cursor-grabbing ${className}`}
         style={{
           width: containerSize,
           height: containerSize,

@@ -13,6 +13,7 @@ export const PhotoGallery = ({
 }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [windowWidth, setWindowWidth] = useState(typeof window !== "undefined" ? window.innerWidth : 1200);
 
   useEffect(() => {
     const visibilityTimer = setTimeout(() => {
@@ -31,6 +32,26 @@ export const PhotoGallery = ({
       clearTimeout(animationTimer);
     };
   }, [animationDelay]);
+
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener("resize", handleResize);
+    // Call once to ensure correct sizing on mount
+    handleResize();
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const isMobile = windowWidth < 768;
+  const isTablet = windowWidth >= 768 && windowWidth < 1024;
+
+  const photoWidth = isMobile ? 140 : isTablet ? 190 : 240;
+  const photoHeight = isMobile ? 190 : isTablet ? 260 : 320;
+
+  const getXOffset = (desktop: number, tablet: number, mobile: number) => {
+    if (isMobile) return `${mobile}px`;
+    if (isTablet) return `${tablet}px`;
+    return `${desktop}px`;
+  };
 
   const containerVariants = {
     hidden: { opacity: 1 },
@@ -69,7 +90,7 @@ export const PhotoGallery = ({
     {
       id: 1,
       order: 0,
-      x: "-320px",
+      x: getXOffset(-320, -220, -110),
       y: "15px",
       zIndex: 50,
       direction: "left" as Direction,
@@ -79,7 +100,7 @@ export const PhotoGallery = ({
     {
       id: 2,
       order: 1,
-      x: "-160px",
+      x: getXOffset(-160, -110, -55),
       y: "32px",
       zIndex: 40,
       direction: "left" as Direction,
@@ -99,7 +120,7 @@ export const PhotoGallery = ({
     {
       id: 4,
       order: 3,
-      x: "160px",
+      x: getXOffset(160, 110, 55),
       y: "22px",
       zIndex: 20,
       direction: "right" as Direction,
@@ -109,7 +130,7 @@ export const PhotoGallery = ({
     {
       id: 5,
       order: 4,
-      x: "320px",
+      x: getXOffset(320, 220, 110),
       y: "44px",
       zIndex: 10,
       direction: "left" as Direction,
@@ -144,7 +165,10 @@ export const PhotoGallery = ({
             initial="hidden"
             animate={isLoaded ? "visible" : "hidden"}
           >
-            <div className="relative h-[320px] w-[240px]">
+            <div 
+              className="relative transition-all duration-300"
+              style={{ height: photoHeight, width: photoWidth }}
+            >
               {[...photos].reverse().map((photo) => (
                 <motion.div
                   key={photo.id}
@@ -158,8 +182,8 @@ export const PhotoGallery = ({
                   }}
                 >
                   <Photo
-                    width={240}
-                    height={320}
+                    width={photoWidth}
+                    height={photoHeight}
                     src={photo.src}
                     alt={photo.category}
                     direction={photo.direction}

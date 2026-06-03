@@ -253,9 +253,9 @@ const Gallery = () => {
                 <motion.div 
                   whileHover={{ scale: 1.01, y: -4 }}
                   transition={{ duration: 0.3, ease: "easeOut" }}
-                  className="bg-background/20 backdrop-blur-md rounded-3xl border border-border/30 shadow-2xl min-h-[750px] w-full p-4 md:p-8 shimmer-card animated-border-glow"
+                  className="bg-background/20 backdrop-blur-md rounded-3xl border border-border/30 shadow-2xl min-h-[500px] md:min-h-[750px] w-full p-4 md:p-8 shimmer-card animated-border-glow"
                 >
-                  <div className="w-full h-full relative rounded-2xl overflow-hidden border border-border/10 bg-black/10 flex flex-col items-center justify-center">
+                  <div className="w-full h-full relative rounded-2xl overflow-hidden border border-border/10 bg-black/10 flex flex-col items-center justify-center py-8">
                     <PhotoGallery onCategorySelect={setSelectedCategory} />
                   </div>
                 </motion.div>
