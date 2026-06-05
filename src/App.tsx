@@ -20,6 +20,7 @@ const FAQ = lazy(() => import("./pages/FAQ"));
 const Contact = lazy(() => import("./pages/Contact"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
+
 const queryClient = new QueryClient();
 
 const AnimatedRoutes = () => {
