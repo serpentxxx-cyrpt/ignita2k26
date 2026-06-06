@@ -14,6 +14,8 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import CharacterHeroScene from "@/components/CharacterHeroScene";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { Sparkles, ArrowRight } from "lucide-react";
+import CountdownTimer from "@/components/CountdownTimer";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -59,21 +61,11 @@ const Index = () => {
         },
       });
 
-      // Phase 1: Fade out and translate the intro overlay
-      tl.to("#showcase-overlay-intro", {
-        opacity: 0,
-        x: isMobile ? 0 : -80,
-        y: isMobile ? -50 : 0,
-        duration: 0.4,
-        ease: "power2.inOut",
-      });
-
-      // Phase 2: Fade in and slide up the about overlay
+      // Phase 1: Fade in the About the Fest overlay (character model already visible as bg)
       tl.fromTo(
         "#showcase-overlay-about",
         { opacity: 0, y: 50 },
-        { opacity: 1, y: 0, duration: 0.4, ease: "power2.out" },
-        "-=0.1"
+        { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" },
       );
     }, indexRef);
 
@@ -95,9 +87,7 @@ const Index = () => {
           
           {/* Below sections flow up naturally following pin completion */}
           <div className="relative bg-[#050406] z-20">
-            <Highlights centerOnMobile />
-            
-            <div className="w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+            {/* Highlights removed */}
             
             {/* Model 2 - Pinned Telemetry Character Hero Showcase Section */}
             <section
@@ -114,135 +104,103 @@ const Index = () => {
                 <CharacterHeroScene scrollProgressRef={characterScrollProgressRef} />
               </Suspense>
 
-              {/* HUD Frame / Telemetry lines overlay */}
+              {/* HUD Frame — corner brackets only */}
               <div className="absolute inset-6 md:inset-10 border border-white/[0.03] pointer-events-none z-20">
                 {/* Corner brackets */}
                 <div className="absolute top-0 left-0 w-6 h-6 border-t border-l border-secondary/60" />
                 <div className="absolute top-0 right-0 w-6 h-6 border-t border-r border-secondary/60" />
                 <div className="absolute bottom-0 left-0 w-6 h-6 border-b border-l border-secondary/60" />
                 <div className="absolute bottom-0 right-0 w-6 h-6 border-b border-r border-secondary/60" />
-
-                {/* Telemetry metadata */}
-                <div className="absolute top-4 left-6 flex items-center gap-2 text-[9px] font-mono tracking-widest text-white/50">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
-                  <span>TELEMETRY LINK - LIVE</span>
-                </div>
-
-                <div className="absolute top-4 right-6 text-[9px] font-mono tracking-widest text-white/50">
-                  <span>REACTOR CORE: <span className="text-secondary font-bold">98.4%</span></span>
-                </div>
-
-                <div className="absolute bottom-4 left-6 text-[9px] font-mono tracking-widest text-white/40">
-                  <span>N.E.X.U.S. // COMPILER // VER. 2.0.26</span>
-                </div>
-
-                <div className="absolute bottom-4 right-6 text-[9px] font-mono tracking-widest text-white/40 animate-pulse">
-                  <span>SCROLL TO ANALYZE ↓</span>
-                </div>
               </div>
 
-              {/* Overlay Content A - Intro Info (Fades out on scroll) */}
-              <div
-                id="showcase-overlay-intro"
-                className="absolute inset-0 flex items-center pointer-events-none z-20"
-              >
-                <div className="container mx-auto px-8 md:px-20 lg:px-28">
-                  <div className="max-w-xl space-y-6 pointer-events-auto">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/20 bg-primary/5">
-                      <span className="text-[10px] font-semibold text-primary uppercase tracking-[0.2em] font-mono">
-                        PROTOCOL: MK-2K26
-                      </span>
-                    </div>
-                    <h1 className="font-heading text-6xl md:text-8xl font-bold tracking-tighter leading-none">
-                      I am <br />
-                      <span className="bg-clip-text text-transparent bg-gradient-to-b from-white to-white/70">Nexus</span>
-                      <span className="text-secondary text-glow-purple">.</span>
-                    </h1>
-                    <p className="text-muted-foreground text-sm md:text-base max-w-md font-light leading-relaxed">
-                      The ultimate multi-domain technology fest. Engineered to push the limits of innovation, design, and code. Scroll to initiate full system telemetry.
-                    </p>
-                    
-                    <div className="flex gap-4 pt-2">
-                      <div className="flex flex-col text-left border-l-2 border-secondary pl-3">
-                        <span className="text-[10px] font-mono uppercase text-white/40">SYSTEM RUNTIME</span>
-                        <span className="text-sm font-bold text-white">ACTIVE</span>
-                      </div>
-                      <div className="flex flex-col text-left border-l-2 border-secondary pl-3">
-                        <span className="text-[10px] font-mono uppercase text-white/40">REACTOR SPEED</span>
-                        <span className="text-sm font-bold text-white">3.2 GHZ</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Overlay Content B - About Info (Fades in on scroll) */}
+              {/* Overlay — About Info (Fades in on scroll, character model as bg) */}
               <div
                 id="showcase-overlay-about"
-                className="absolute inset-0 flex items-center justify-center lg:justify-start pointer-events-none z-20 opacity-0"
+                className="absolute inset-0 flex items-center pointer-events-none z-20 opacity-0"
               >
-                <div className="container mx-auto px-8 md:px-20 lg:px-28">
-                  <div className="max-w-2xl space-y-6 pointer-events-auto glass-card p-6 md:p-8 border border-white/5 bg-black/40 backdrop-blur-md rounded-3xl shadow-[0_0_50px_rgba(168,85,247,0.1)]">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-neon-cyan/20 bg-neon-cyan/5">
-                      <span className="text-[10px] font-semibold text-neon-cyan uppercase tracking-[0.2em] font-mono">
-                        Fest Diagnostics
-                      </span>
-                    </div>
-                    <h2 className="font-heading text-4xl md:text-5xl font-bold tracking-tight">
-                      About the <span className="bg-clip-text text-transparent bg-gradient-to-r from-neon-cyan to-primary">Fest & Initiative</span>
-                    </h2>
-                    <p className="text-muted-foreground text-sm md:text-base font-light leading-relaxed">
-                      IGNITIA 2K26 brings together the brightest coders, designers, gamers, and roboticists. Sponsored by UEM Kolkata and IEM-UEM Group, it is a crucible of competitive spirit, creative expression, and technical mastery. Join us for 2 days of adrenaline, innovation, and celebration.
-                    </p>
-                    
-                    {/* Core Stats / Grid inside about */}
-                    <div className="grid grid-cols-2 gap-4 pt-2">
-                      <div className="border-t border-white/5 pt-4">
-                        <h5 className="text-xs uppercase font-mono text-white/50 tracking-wider">PRIZE MATRIX</h5>
-                        <p className="text-xl font-bold text-secondary">₹2,00,000+</p>
-                      </div>
-                      <div className="border-t border-white/5 pt-4">
-                        <h5 className="text-xs uppercase font-mono text-white/50 tracking-wider">COLLABORATORS</h5>
-                        <p className="text-xl font-bold text-neon-cyan">50+ Campus Links</p>
-                      </div>
-                      <div className="border-t border-white/5 pt-4">
-                        <h5 className="text-xs uppercase font-mono text-white/50 tracking-wider">CHAMPIONS</h5>
-                        <p className="text-xl font-bold text-primary">5000+ Footfall</p>
-                      </div>
-                      <div className="border-t border-white/5 pt-4">
-                        <h5 className="text-xs uppercase font-mono text-white/50 tracking-wider">ENGAGEMENTS</h5>
-                        <p className="text-xl font-bold text-white">7+ Arenas</p>
-                      </div>
+                {/* SVG data connection lines from right edge (character) to the panel */}
+                <svg className="absolute inset-0 w-full h-full pointer-events-none" aria-hidden>
+                  <line x1="75%" y1="30%" x2="52%" y2="20%" stroke="rgba(168,85,247,0.15)" strokeWidth="1" strokeDasharray="4 6" />
+                  <line x1="78%" y1="55%" x2="52%" y2="55%" stroke="rgba(0,255,200,0.1)" strokeWidth="1" strokeDasharray="3 8" />
+                  <line x1="72%" y1="75%" x2="52%" y2="80%" stroke="rgba(197,160,89,0.12)" strokeWidth="1" strokeDasharray="4 6" />
+                  <circle cx="75%" cy="30%" r="3" fill="rgba(168,85,247,0.3)" />
+                  <circle cx="78%" cy="55%" r="3" fill="rgba(0,255,200,0.2)" />
+                  <circle cx="72%" cy="75%" r="3" fill="rgba(197,160,89,0.25)" />
+                </svg>
+
+                <div className="container mx-auto px-8 md:px-16 lg:px-20 pointer-events-auto">
+                  {/* HUD Panel — sharp corners, no border-radius */}
+                  <div className="max-w-xl space-y-5 border border-white/10 bg-black/70 backdrop-blur-md p-6 md:p-8 relative"
+                    style={{ clipPath: "polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px))" }}
+                  >
+                    {/* Corner brackets */}
+                    <div className="absolute top-0 right-0 w-5 h-5 bg-primary/40" style={{ clipPath: "polygon(0 0, 100% 0, 100% 100%)" }} />
+                    <div className="absolute bottom-0 left-0 w-5 h-5 bg-secondary/40" style={{ clipPath: "polygon(0 0, 0 100%, 100% 100%)" }} />
+                    <div className="absolute top-2 left-2 w-3 h-3 border-t border-l border-primary/50" />
+                    <div className="absolute bottom-2 right-2 w-3 h-3 border-b border-r border-secondary/50" />
+
+                    {/* System label */}
+                    <div className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-neon-cyan animate-ping" />
+                      <span className="font-mono text-[9px] tracking-[0.3em] text-neon-cyan/60 uppercase">Fest Diagnostics // System Readout</span>
                     </div>
 
-                    {/* CTA buttons */}
-                    <div className="pt-4 flex flex-wrap gap-4">
-                      <a href="#register" className="glow-button flex items-center gap-2 text-xs py-2.5 px-6">
+                    {/* Title */}
+                    <div>
+                      <h2 className="font-heading text-3xl md:text-4xl font-bold tracking-tight leading-tight">
+                        About the{" "}
+                        <span className="bg-clip-text text-transparent bg-gradient-to-r from-neon-cyan to-primary">
+                          Fest &amp; Initiative
+                        </span>
+                      </h2>
+                    </div>
+
+                    {/* Terminal description */}
+                    <p className="font-mono text-xs md:text-sm text-white/50 leading-relaxed border-l-2 border-primary/30 pl-3">
+                      <span className="text-primary/60 mr-1">//</span>
+                      IGNITIA 2K26 brings together the brightest coders, designers, gamers, and roboticists. A crucible of competitive spirit and technical mastery — 2 days of adrenaline and innovation.
+                    </p>
+
+                    {/* Horizontal stat bars */}
+                    <div className="space-y-3 pt-1">
+                      {[
+                        { label: "PRIZE POOL", value: "₹2,00,000+", pct: 90, color: "from-secondary to-yellow-400" },
+                        { label: "FOOTFALL",   value: "5000+",      pct: 85, color: "from-primary to-purple-400" },
+                        { label: "COLLABORATORS", value: "50+ Colleges", pct: 75, color: "from-neon-cyan to-teal-400" },
+                        { label: "ARENAS",     value: "7+",         pct: 55, color: "from-pink-500 to-primary" },
+                      ].map(({ label, value, pct, color }) => (
+                        <div key={label} className="space-y-1">
+                          <div className="flex justify-between items-baseline">
+                            <span className="font-mono text-[9px] text-white/40 uppercase tracking-widest">{label}</span>
+                            <span className="font-mono text-xs font-bold text-white/80">{value}</span>
+                          </div>
+                          <div className="relative h-[3px] bg-white/[0.06] overflow-hidden">
+                            <div
+                              className={`absolute inset-y-0 left-0 bg-gradient-to-r ${color}`}
+                              style={{ width: `${pct}%` }}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* CTAs */}
+                    <div className="flex flex-wrap gap-3 pt-2">
+                      <a href="#register" className="glow-button flex items-center gap-2 text-xs py-2 px-5">
                         <span>Access Portal</span>
-                        <span className="text-[10px] font-mono opacity-80">&gt;&gt;</span>
+                        <span className="font-mono opacity-70">&gt;&gt;</span>
                       </a>
-                      <a href="/events" className="glow-button-secondary border-white/10 text-white hover:border-white/30 text-xs py-2.5 px-6">
-                        <span>Fest Schedule</span>
+                      <a href="/events" className="glow-button-secondary border-white/10 text-white hover:border-white/30 text-xs py-2 px-5">
+                        Fest Schedule
                       </a>
                     </div>
                   </div>
                 </div>
               </div>
+
             </section>
 
-            <div className="w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-            
-            <WhyAttend />
-            
-            <div className="w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-            
-            <FAQSection />
-            
-            <div className="w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-            
-            <ParallaxSection offset={isMobile ? 10 : 25}>
-              <Sponsors centerOnMobile />
-            </ParallaxSection>
+            {/* Removed WhyAttend, FAQ, and Sponsors */}
             
             <div className="w-full h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
             

@@ -690,3 +690,24 @@
     }
   }
 }
+
+/* ── Custom keyframes for Phase 4 particles and shimmer ── */
+@keyframes float-particle {
+  0%   { transform: translateY(0px) translateX(0px); opacity: 0.04; }
+  33%  { transform: translateY(-18px) translateX(8px); opacity: 0.08; }
+  66%  { transform: translateY(-8px) translateX(-6px); opacity: 0.05; }
+  100% { transform: translateY(0px) translateX(0px); opacity: 0.04; }
+}
+
+@keyframes shimmer {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+
+.animate-float-particle {
+  animation: float-particle var(--duration, 7s) ease-in-out infinite;
+}
+
+.animate-shimmer {
+  animation: shimmer 2.5s ease-in-out infinite;
+}

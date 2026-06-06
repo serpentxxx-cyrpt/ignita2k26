@@ -139,7 +139,7 @@ const HeroSection = () => {
           ease: "power2.in",
           onUpdate: updateCamera,
         })
-        
+
         // ── Phase 2.5: Blackout ──────────────────────────────────────────────
         // Right as we enter the bright visor, fade the entire canvas to black
         .to(
@@ -152,12 +152,12 @@ const HeroSection = () => {
         .fromTo(
           ".portal-ring",
           { scale: 0, opacity: 1 },
-          { 
+          {
             scale: (i) => 8 + (i * 2), // Expand massively off-screen
             opacity: 0, // Fade out completely as they expand
-            duration: 0.8, 
-            stagger: 0.15, 
-            ease: "power1.inOut" 
+            duration: 0.8,
+            stagger: 0.15,
+            ease: "power1.inOut"
           }
         )
 
@@ -218,13 +218,13 @@ const HeroSection = () => {
       </div>
 
       {/* ── Phase 2.5 Blackout overlay ── */}
-      <div 
+      <div
         ref={blackoutRef}
         className="absolute inset-0 bg-[#050406] z-[5] opacity-0 pointer-events-none"
       />
 
       {/* ── Phase 3 Portal overlay — concentric expanding rings ── */}
-      <div 
+      <div
         ref={portalRef}
         className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none overflow-hidden"
       >
@@ -234,73 +234,119 @@ const HeroSection = () => {
       </div>
 
       {/* ── Phase 4 UI overlay — fades in after the plunge ── */}
-      {/* Starts at opacity-0; GSAP animates it to opacity-100 */}
+      {/* Starts at opacity-0; GSAP animates it to opacity-1 */}
       <div
         ref={heroContentRef}
-        className="absolute inset-0 flex items-center justify-center opacity-0 z-20 pointer-events-auto bg-black/40 backdrop-blur-[2px]"
+        className="absolute inset-0 opacity-0 z-20 pointer-events-auto bg-black/50 backdrop-blur-[2px] overflow-hidden"
       >
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(168,85,247,0.15)_0%,rgba(0,0,0,0)_70%)] pointer-events-none" />
-        
-        <div className="container mx-auto px-4 text-center relative max-w-6xl mt-12 md:mt-0">
-          <div className="flex flex-col items-center gap-6 md:gap-8">
-            
-            {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/30 bg-primary/10 backdrop-blur-md">
-              <Sparkles size={14} className="text-primary animate-pulse" />
-              <span className="text-sm font-medium text-primary tracking-wide uppercase">
-                IEM-UEM Group × UEM Kolkata
-              </span>
+        {/* Subtle radial glow behind content */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_80%_at_20%_50%,rgba(168,85,247,0.12)_0%,rgba(0,0,0,0)_70%)] pointer-events-none" />
+
+        {/* ── Floating code/binary particles ── */}
+        <div className="absolute inset-0 pointer-events-none select-none overflow-hidden" aria-hidden>
+          {["01", "//", "0x", "{}", "1A", "if", "fn", "10", "AI", "∑", "λ", ">>", "0b", "∞", "=="].map((char, i) => (
+            <span
+              key={i}
+              className="absolute font-mono text-white/[0.06] text-xs animate-float-particle"
+              style={{
+                left: `${(i * 6.5 + 3) % 95}%`,
+                top: `${(i * 13 + 7) % 90}%`,
+                animationDelay: `${i * 0.4}s`,
+                animationDuration: `${6 + (i % 4)}s`,
+                fontSize: i % 3 === 0 ? "1.5rem" : "0.7rem",
+              }}
+            >
+              {char}
+            </span>
+          ))}
+        </div>
+
+        {/* ── Main content: asymmetric editorial layout ── */}
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full px-8 md:px-16 lg:px-24 grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-8 items-center">
+
+            {/* LEFT: Editorial title block */}
+            <div className="space-y-5">
+              {/* Org label */}
+              <div className="flex items-center gap-3">
+                <span className="block w-8 h-px bg-primary/60" />
+                <span className="font-mono text-[10px] text-primary/80 uppercase tracking-[0.3em]">
+                  IEM-UEM Group × UEM Kolkata
+                </span>
+              </div>
+
+              {/* Asymmetric stacked title */}
+              <div className="relative">
+                <h1 className="font-heading leading-[0.85] tracking-tighter">
+                  <span className="block text-[clamp(4rem,12vw,9rem)] font-black bg-clip-text text-transparent bg-gradient-to-b from-white via-white to-white/50 select-none">
+                    IGNITIA
+                  </span>
+                  <span className="block text-[clamp(2rem,7vw,5.5rem)] font-black bg-clip-text text-transparent bg-gradient-to-r from-primary via-purple-400 to-secondary ml-2 md:ml-6">
+                    2K26
+                  </span>
+                </h1>
+                {/* Vertical accent line */}
+                <div className="absolute left-[-1.5rem] top-0 bottom-0 w-px bg-gradient-to-b from-primary/0 via-primary/60 to-primary/0" />
+              </div>
+
+              {/* Terminal-style tagline */}
+              <p className="font-mono text-sm md:text-base text-white/60 tracking-wide">
+                <span className="text-primary/70 mr-2">&gt;</span>
+                {typedText}
+                <span className="animate-blink text-primary">_</span>
+              </p>
+
+              {/* Date + venue as inline terminal data */}
+              <div className="flex flex-wrap gap-x-6 gap-y-1 font-mono text-xs text-white/40">
+                <span><span className="text-secondary/70">DATE</span> :: 01–02.AUG.2026</span>
+                <span><span className="text-neon-cyan/70">LOC</span> :: UEM Kolkata, WB</span>
+              </div>
+
+              {/* CTAs — left-aligned, not centred */}
+              <div className="flex flex-wrap gap-4 pt-2">
+                <a href="#register" className="hero-primary-button pulse-cta flex items-center gap-3 text-sm">
+                  Register Now
+                  <ArrowRight size={16} />
+                </a>
+                <a href="/events" className="hero-secondary-button glow-button-secondary flex items-center gap-3 text-sm">
+                  Explore Events
+                  <ArrowRight size={16} />
+                </a>
+              </div>
             </div>
 
-            {/* Title */}
-            <h1 className="font-heading text-6xl sm:text-8xl md:text-9xl lg:text-[10rem] font-bold tracking-tighter leading-none filter drop-shadow-2xl mb-2">
-              <span className="bg-clip-text text-transparent bg-gradient-to-b from-white via-white to-white/60">
-                IGNITIA
-              </span>
-              <span className="block mt-[-0.1em] text-4xl sm:text-6xl md:text-7xl lg:text-8xl bg-clip-text text-transparent bg-gradient-to-r from-primary via-neon-purple to-secondary">
-                2K26
-              </span>
-            </h1>
-
-            {/* Typewriter tagline */}
-            <p className="text-lg md:text-2xl text-white/80 max-w-2xl h-8 font-light tracking-wide">
-              {typedText}
-              <span className="animate-blink text-primary">_</span>
-            </p>
-
-            {/* Date + venue chips */}
-            <div className="flex flex-wrap justify-center items-center gap-4 text-sm md:text-base font-medium">
-              <span className="glass-card px-5 py-2.5 bg-black/40 border-white/10 text-white/90 shadow-[0_0_15px_rgba(168,85,247,0.2)]">
-                📅 1st &amp; 2nd August 2026
-              </span>
-              <span className="glass-card px-5 py-2.5 bg-black/40 border-white/10 text-white/90 shadow-[0_0_15px_rgba(168,85,247,0.2)]">
-                📍 UEM Kolkata
-              </span>
-            </div>
-
-            {/* CTAs */}
-            <div className="flex flex-col sm:flex-row gap-4 mt-4 w-full sm:w-auto justify-center">
-              <a
-                href="#register"
-                className="hero-primary-button pulse-cta flex items-center justify-center gap-3"
+            {/* RIGHT: Glitch T-MINUS countdown */}
+            <div className="w-full lg:w-auto lg:min-w-[320px] pointer-events-auto">
+              <div className="relative border border-white/10 bg-black/60 p-5 md:p-7 overflow-hidden"
+                style={{ clipPath: "polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px))" }}
               >
-                Register Now
-                <ArrowRight size={18} />
-              </a>
-              <a
-                href="/events"
-                className="hero-secondary-button glow-button-secondary flex items-center justify-center gap-3"
-              >
-                Explore Events
-                <ArrowRight size={18} />
-              </a>
+                {/* Corner accent */}
+                <div className="absolute top-0 right-0 w-4 h-4 bg-primary/50" style={{ clipPath: "polygon(0 0, 100% 0, 100% 100%)" }} />
+                <div className="absolute bottom-0 left-0 w-4 h-4 bg-secondary/50" style={{ clipPath: "polygon(0 0, 0 100%, 100% 100%)" }} />
+
+                {/* Label */}
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                  <span className="font-mono text-[9px] tracking-[0.35em] text-white/40 uppercase">T-Minus // Event Launch Sequence</span>
+                </div>
+
+                {/* Countdown display */}
+                <CountdownTimer embedded />
+
+                {/* Time elapsed bar */}
+                <div className="mt-4 space-y-1">
+                  <div className="flex justify-between font-mono text-[8px] text-white/30 uppercase tracking-widest">
+                    <span>Event window open</span>
+                    <span>Launch</span>
+                  </div>
+                  <div className="relative h-[2px] bg-white/10 overflow-hidden">
+                    <div className="absolute inset-y-0 left-0 bg-gradient-to-r from-primary to-secondary w-[82%]" />
+                    <div className="absolute inset-0 animate-shimmer bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+                  </div>
+                </div>
+              </div>
             </div>
 
-            {/* Countdown */}
-            <div className="w-full max-w-4xl mt-8 glass-card bg-black/40 border-white/10 p-6 md:p-8 rounded-2xl shadow-[0_0_30px_rgba(168,85,247,0.15)] relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-secondary/10 pointer-events-none" />
-              <CountdownTimer embedded />
-            </div>
           </div>
         </div>
       </div>
@@ -308,4 +354,4 @@ const HeroSection = () => {
   );
 };
 
-export default HeroSection;
+export default HeroSection;
