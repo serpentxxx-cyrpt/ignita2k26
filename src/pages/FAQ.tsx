@@ -221,40 +221,101 @@ const FAQ = () => {
                 </div>
               </div>
 
-              {/* The 3 Connecting Rays (SVG) - Attached exactly to the right edge */}
-              <div className="absolute left-[100%] top-0 w-[150px] lg:w-[260px] h-full pointer-events-none z-[16] hidden lg:block">
-                <svg className="w-full h-full overflow-visible" style={{ position: 'absolute' }}>
+              {/* The Magical Golden Spell Ray - Wand to Terminal */}
+              <div className="absolute left-[100%] top-0 w-[45vw] xl:w-[40vw] h-full pointer-events-none z-[16] hidden lg:block">
+                <svg className="absolute top-0 w-full h-full overflow-visible">
                   <defs>
-                    <filter id="ray-glow" x="-50%" y="-50%" width="200%" height="200%">
-                      <feGaussianBlur stdDeviation="4" result="coloredBlur" />
+                    {/* CSS keyframe — all animations flow wand → terminal (one direction) */}
+                    <style>{`
+                      @keyframes spiralFlow {
+                        from { stroke-dashoffset: 0; }
+                        to   { stroke-dashoffset: -62; }
+                      }
+                      @keyframes coreFlow {
+                        from { stroke-dashoffset: 0; }
+                        to   { stroke-dashoffset: -205; }
+                      }
+                    `}</style>
+
+                    {/* Soft glow filter for the spiral strands */}
+                    <filter id="strand-glow" x="-80%" y="-80%" width="260%" height="260%">
+                      <feGaussianBlur stdDeviation="4" result="blur" />
                       <feMerge>
-                        <feMergeNode in="coloredBlur" />
+                        <feMergeNode in="blur" />
                         <feMergeNode in="SourceGraphic" />
                       </feMerge>
                     </filter>
+
+                    {/* Heavy glow for the core beam */}
+                    <filter id="core-glow" x="-80%" y="-80%" width="260%" height="260%">
+                      <feGaussianBlur stdDeviation="10" result="blur" />
+                      <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+
+                    {/* Outer gradient: gold at wand → transparent at terminal */}
+                    <linearGradient id="spell-fade" gradientUnits="objectBoundingBox" x1="1" y1="0" x2="0" y2="0">
+                      <stop offset="0%"   stopColor="#ffd700" stopOpacity="1" />
+                      <stop offset="65%"  stopColor="#f59e0b" stopOpacity="0.85" />
+                      <stop offset="88%"  stopColor="#f97316" stopOpacity="0.3" />
+                      <stop offset="100%" stopColor="#ffd700" stopOpacity="0" />
+                    </linearGradient>
+
+                    {/* Strand gradient */}
+                    <linearGradient id="strand-fade" gradientUnits="objectBoundingBox" x1="1" y1="0" x2="0" y2="0">
+                      <stop offset="0%"   stopColor="#ffffff" stopOpacity="0.9" />
+                      <stop offset="70%"  stopColor="#fde68a" stopOpacity="0.6" />
+                      <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+                    </linearGradient>
                   </defs>
 
-                  {/* Top Ray (Golden) */}
-                  <line x1="0" y1="0" x2="100%" y2="-80" stroke="#ffd700" strokeWidth="3" filter="url(#ray-glow)" />
-                  <circle cx="0" cy="0" r="4" fill="#ffd700" filter="url(#ray-glow)" />
+                  {/* === Central thick golden beam (axis of the spiral) === */}
+                  <line
+                    x1="36%" y1="-70"
+                    x2="0" y2="0"
+                    stroke="url(#spell-fade)"
+                    strokeWidth="10"
+                    strokeLinecap="round"
+                    strokeDasharray="200 5"
+                    filter="url(#core-glow)"
+                    style={{ animation: "coreFlow 1.6s linear infinite" }}
+                  />
 
-                  {/* Middle Ray (White) */}
-                  <line x1="0" y1="50%" x2="100%" y2="-80" stroke="#ffffff" strokeWidth="3" filter="url(#ray-glow)" />
-                  <circle cx="0" cy="50%" r="4" fill="#ffffff" filter="url(#ray-glow)" />
+                  {/* === Strand 1: offset above-right of beam axis === */}
+                  {/* Perpendicular offset +8px from center */}
+                  <line
+                    x1="34.7%" y1="-77"
+                    x2="-0.9%" y2="-7"
+                    stroke="url(#strand-fade)"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeDasharray="30 30"
+                    filter="url(#strand-glow)"
+                    style={{ animation: "spiralFlow 1.0s linear infinite" }}
+                  />
 
-                  {/* Bottom Ray (Red) */}
-                  <line x1="0" y1="100%" x2="100%" y2="-80" stroke="#ef4444" strokeWidth="3" filter="url(#ray-glow)" />
-                  <circle cx="0" cy="100%" r="4" fill="#ef4444" filter="url(#ray-glow)" />
-
-                  {/* Wand Convergence Dot */}
-                  <circle cx="100%" cy="-80" r="6" fill="#ffffff" filter="url(#ray-glow)" />
+                  {/* === Strand 2: offset below-left of beam axis (half-period delay = crossing) === */}
+                  {/* Perpendicular offset -8px from center */}
+                  <line
+                    x1="37.3%" y1="-63"
+                    x2="0.9%" y2="7"
+                    stroke="url(#strand-fade)"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeDasharray="30 30"
+                    filter="url(#strand-glow)"
+                    style={{ animation: "spiralFlow 1.0s linear infinite", animationDelay: "-0.5s" }}
+                  />
                 </svg>
-              </div>
 
             </div>
 
-            {/* Right Side: 3D Model - Reverted to absolute positioning as requested */}
-            <div className="absolute -right-[5.5rem] lg:-right-[10.5rem] -top-[32vh] lg:-top-[62vh] w-[300px] h-[450px] lg:w-[450px] lg:h-[650px] z-[15] pointer-events-none">
+            </div>
+
+            {/* Right Side: 3D Model */}
+            <div className="absolute -right-[2rem] lg:-right-[8rem] -top-[32vh] lg:-top-[62vh] w-[300px] h-[450px] lg:w-[450px] lg:h-[650px] z-[15] pointer-events-none">
               <FAQHeroScene />
             </div>
 

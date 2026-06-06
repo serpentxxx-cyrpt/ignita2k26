@@ -1,6 +1,6 @@
-import { useState, useRef } from "react";
-import { motion, useScroll, useTransform, useSpring } from "framer-motion";
-import { Clock, MapPin, Calendar } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { motion } from "framer-motion";
+import { Clock, MapPin, Calendar, Sparkles } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PageTransition from "@/components/PageTransition";
@@ -111,88 +111,384 @@ const schedule = {
   ],
 };
 
-const TimelineItem = ({
-  item,
-  index,
-  isLeft,
-}: {
-  item: { time: string; title: string; venue: string; color: string };
-  index: number;
-  isLeft: boolean;
-}) => {
-  const ref = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ["start end", "center center"],
-  });
-  const x = useSpring(
-    useTransform(scrollYProgress, [0, 1], [isLeft ? -80 : 80, 0]),
-    { stiffness: 80, damping: 20 },
+export interface NodeConfig {
+  x: number;
+  y: number;
+  cp1X: number;
+  cp1Y: number;
+  cp2X: number;
+  cp2Y: number;
+}
+
+// Organic Path Generator using randomized NodeConfigs
+const generateZigzagPath = (layout: NodeConfig[]) => {
+  if (layout.length === 0) return "";
+  let d = "M 400,0 ";
+  for (let i = 0; i < layout.length; i++) {
+    const node = layout[i];
+    if (i === 0) {
+      d += `C 400,60 ${node.x},60 ${node.x},${node.y} `;
+    } else {
+      d += `C ${node.cp1X},${node.cp1Y} ${node.cp2X},${node.cp2Y} ${node.x},${node.y} `;
+    }
+  }
+  const lastNode = layout[layout.length - 1];
+  d += `C ${lastNode.x},${lastNode.y + 80} 400,${lastNode.y + 120} 400,${lastNode.y + 240}`;
+  return d;
+};
+
+const SvgPath = ({ layout, totalH }: { layout: NodeConfig[]; totalH: number }) => {
+  const d = generateZigzagPath(layout);
+  return (
+    <svg
+      className="absolute top-0 left-0 w-full h-full pointer-events-none z-0 zigzag-path-svg"
+      viewBox={`0 0 800 ${totalH}`}
+      fill="none"
+      preserveAspectRatio="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      {/* Faint base dotted line */}
+      <path
+        className="zigzag-path-line"
+        d={d}
+        stroke="url(#zigzag-grad)"
+        strokeOpacity="0.2"
+        strokeWidth="3"
+        strokeLinecap="round"
+        strokeDasharray="12 8"
+        fill="none"
+      />
+      {/* Solid glowing neon line that fills as you scroll */}
+      <path
+        id="neon-path-line"
+        d={d}
+        stroke="url(#zigzag-grad)"
+        strokeWidth="4"
+        strokeLinecap="round"
+        fill="none"
+        filter="drop-shadow(0 0 8px rgba(147,51,234,0.8))"
+      />
+      <defs>
+        <linearGradient id="zigzag-grad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#ffd700" stopOpacity="1" />
+          <stop offset="50%" stopColor="#9333ea" stopOpacity="1" />
+          <stop offset="100%" stopColor="#e9d5ff" stopOpacity="1" />
+        </linearGradient>
+      </defs>
+    </svg>
   );
-  const opacity = useTransform(scrollYProgress, [0, 0.3], [0, 1]);
-  const scale = useSpring(useTransform(scrollYProgress, [0, 1], [0.85, 1]), {
-    stiffness: 100,
-    damping: 20,
-  });
+};
+
+const ScrambleText = ({ text, isHovered }: { text: string, isHovered: boolean }) => {
+  const [displayText, setDisplayText] = useState(text);
+
+  useEffect(() => {
+    if (isHovered) {
+      let iterations = 0;
+      const interval = setInterval(() => {
+        setDisplayText(text.split('').map((char, index) => {
+          if (char === ' ') return ' ';
+          if (index < iterations) return text[index];
+          return String.fromCharCode(33 + Math.floor(Math.random() * 94));
+        }).join(''));
+
+        iterations += 1 / 3;
+        if (iterations >= text.length) clearInterval(interval);
+      }, 30);
+      return () => clearInterval(interval);
+    } else {
+      setDisplayText(text);
+    }
+  }, [isHovered, text]);
+
+  return <>{displayText}</>;
+};
+
+interface ScheduleItem {
+  time: string;
+  title: string;
+  venue: string;
+  color?: string;
+}
+
+const ZigzagNode = ({
+  item, index, isRight, totalH, isCrossed, nodeConfig
+}: {
+  item: ScheduleItem; index: number; isRight: boolean; totalH: number; isCrossed: boolean; nodeConfig: NodeConfig;
+}) => {
+  const topPercent = (nodeConfig.y / totalH) * 100;
+  const [isHovered, setIsHovered] = useState(false);
+
+  // Dot position relative to 800px SVG
+  const dotLeft = `${(nodeConfig.x / 800) * 100}%`;
+
+  // Calculate the card's position relative to the dot.
+  // Left nodes (isRight=false): Place card to the right of the dot.
+  // Right nodes (isRight=true): Place card to the left of the dot.
+  const cardStyle = isRight 
+    ? { right: `${((800 - nodeConfig.x) / 800) * 100 + 4}%`, width: '320px' } 
+    : { left: `${(nodeConfig.x / 800) * 100 + 4}%`, width: '320px' };
 
   return (
-    <motion.div
-      ref={ref}
-      style={{ x, opacity, scale }}
-      className={`flex items-center gap-4 md:gap-8 ${isLeft ? "md:flex-row" : "md:flex-row-reverse"} flex-row`}
+    <div
+      className="absolute w-full z-10 pointer-events-none"
+      style={{ top: `${topPercent}%` }}
     >
-      <div className={`flex-1 ${isLeft ? "md:text-right" : "md:text-left"}`}>
+      {/* Node Dot */}
+      <div 
+        className="absolute w-5 h-5 -mt-2.5 bg-[#0b0614] rounded-full border-[3px] border-[#ffd700] shadow-[0_0_15px_#ffd700] z-30 transition-all duration-500 pointer-events-auto"
+        style={{ 
+           left: dotLeft,
+           transform: 'translateX(-50%)',
+           borderColor: isCrossed ? '#9333ea' : '#ffd700',
+           boxShadow: isCrossed ? '0 0 20px #9333ea' : '0 0 15px #ffd700',
+           scale: isHovered ? 1.2 : 1
+        }}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        {/* Node Unlock Pulse Rings */}
+        {isCrossed && (
+          <motion.div 
+            initial={{ scale: 0.5, opacity: 1 }}
+            animate={{ scale: 2.5, opacity: 0 }}
+            transition={{ duration: 1, repeat: Infinity }}
+            className="absolute inset-0 rounded-full bg-[#9333ea]"
+          />
+        )}
+      </div>
+
+      {/* Card — Holographic Glitch Reveal */}
+      <motion.div
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        whileHover={{ scale: 1.02, x: isRight ? -5 : 5 }}
+        initial={{ opacity: 0, x: isRight ? 50 : -50 }}
+        animate={isCrossed ? { 
+            opacity: 1, 
+            x: [isRight ? 30 : -30, isRight ? -5 : 5, 0],
+            skewX: [10, -5, 0],
+            filter: ["drop-shadow(5px 0px 0px rgba(255,0,0,0.5)) drop-shadow(-5px 0px 0px rgba(0,255,255,0.5)) blur(4px)", "blur(0px)"]
+        } : { opacity: 0, x: isRight ? 50 : -50 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        className={`absolute z-10 pointer-events-auto flex max-w-[85vw] md:max-w-none`}
+        style={cardStyle}
+      >
         <motion.div
-          whileHover={{ scale: 1.04, y: -4 }}
-          className="glass-card p-4 md:p-5 shimmer-card animated-border-glow cursor-pointer"
+          animate={isCrossed ? { y: [0, -6, 0] } : {}}
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+          className="relative w-full rounded-xl overflow-hidden shadow-xl"
         >
-          <div
-            className={`flex items-center gap-2 mb-2 ${isLeft ? "md:justify-end" : ""}`}
-          >
-            <Clock size={14} className="text-primary" />
-            <span className="text-xs text-primary font-semibold">
-              {item.time}
-            </span>
+          <div className="absolute inset-0 z-0 bg-[#0b0614]">
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+              className="absolute -inset-[100%] bg-[conic-gradient(from_0deg,transparent_0%,transparent_75%,#9333ea_100%)] opacity-80"
+            />
           </div>
-          <h3 className="font-heading text-lg font-semibold text-foreground mb-1">
-            {item.title}
-          </h3>
+
+          <div className="absolute inset-[1px] bg-[#0b0614]/90 backdrop-blur-md rounded-xl z-10" />
+
           <div
-            className={`flex items-center gap-1 text-xs text-muted-foreground ${isLeft ? "md:justify-end" : ""}`}
-          >
-            <MapPin size={12} /> {item.venue}
+            className="absolute inset-0 z-10 opacity-10 mix-blend-overlay pointer-events-none rounded-xl"
+            style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.85\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\'/%3E%3C/svg%3E")' }}
+          />
+
+          <motion.div
+            animate={isCrossed ? { top: ['-100%', '200%'] } : {}}
+            transition={{ duration: 3, repeat: Infinity, ease: "linear", repeatDelay: 1 }}
+            className="absolute left-0 w-full h-[50%] bg-gradient-to-b from-transparent via-[#ffd700]/10 to-transparent z-10 pointer-events-none"
+          />
+
+          <div className="relative p-4 md:p-5 w-full z-20">
+            <motion.div
+              animate={isCrossed ? { opacity: [0.3, 1, 0.3] } : {}}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+              className={`absolute inset-y-0 w-[2px] ${isRight ? "left-0 bg-gradient-to-b" : "right-0 bg-gradient-to-b"} from-[#ffd700] via-[#9333ea] to-transparent`}
+            />
+
+            <h4 className="font-heading font-bold text-white/90 text-sm md:text-base mb-2 leading-snug">
+              {item.title}
+            </h4>
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-center gap-2 text-white/55">
+                <Clock size={12} className="text-[#ffd700] shrink-0" />
+                <span className="font-mono text-[11px]">
+                  <ScrambleText text={item.time} isHovered={isHovered} />
+                </span>
+              </div>
+              <div className="flex items-center gap-2 text-white/55">
+                <MapPin size={12} className="text-[#9333ea] shrink-0" />
+                <span className="font-body text-[11px]">
+                  <ScrambleText text={item.venue} isHovered={isHovered} />
+                </span>
+              </div>
+            </div>
           </div>
         </motion.div>
-      </div>
-
-      {/* Center dot */}
-      <div className="relative flex flex-col items-center">
-        <motion.div
-          initial={{ scale: 0 }}
-          whileInView={{ scale: 1 }}
-          viewport={{ once: true }}
-          transition={{ delay: index * 0.05, type: "spring" }}
-          className={`w-4 h-4 rounded-full ${item.color} shadow-lg shadow-primary/30 z-10`}
-        />
-      </div>
-
-      <div className="flex-1 hidden md:block" />
-    </motion.div>
+      </motion.div>
+    </div>
   );
 };
 
 const Schedule = () => {
   const days = Object.keys(schedule);
   const [activeDay, setActiveDay] = useState(days[0]);
-  const timelineRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: timelineRef,
-    offset: ["start center", "end center"],
-  });
-  const lineHeight = useSpring(
-    useTransform(scrollYProgress, [0, 1], ["0%", "100%"]),
-    { stiffness: 40, damping: 15 },
-  );
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const [crossedNodes, setCrossedNodes] = useState<Set<number>>(new Set());
+  const crossedRef = useRef<Set<number>>(new Set());
+  
+  const [layoutConfig, setLayoutConfig] = useState<NodeConfig[]>([]);
+  const [containerHeight, setContainerHeight] = useState<number>(0);
+
+  const currentItems = schedule[activeDay as keyof typeof schedule];
+  const itemCount = currentItems.length;
+
+  useEffect(() => {
+    // Reset crossed nodes when changing days
+    setCrossedNodes(new Set());
+    crossedRef.current = new Set();
+    
+    // Generate mathematically perfect smooth S-curve layout
+    const newLayout: NodeConfig[] = [];
+    let currentY = 120; // Starting Y
+    for (let i = 0; i < itemCount; i++) {
+        const isRight = i % 2 !== 0;
+        
+        // Random X position for the dot (sweep width)
+        // Left zone: 80-180 (far left), Right zone: 620-720 (far right)
+        const x = isRight ? 620 + Math.random() * 100 : 80 + Math.random() * 100;
+        
+        let cp1X = 400, cp1Y = 60, cp2X = x, cp2Y = currentY - 60;
+        
+        if (i > 0) {
+            const prev = newLayout[i - 1];
+            // Random vertical gap between 220 and 450 (needs more vertical space for big sweeps)
+            const gap = 220 + Math.random() * 230;
+            currentY = prev.y + gap;
+            
+            // To guarantee ZERO kinks, the control points must have the exact same X as the node.
+            // This forces the curve to cross the node perfectly vertically (tangent dx/dy = 0).
+            // We organically randomize the "tension" (how fat the curve loops vertically).
+            const tension1 = gap * (0.4 + Math.random() * 0.4); // 40% to 80% of gap height
+            const tension2 = gap * (0.4 + Math.random() * 0.4);
+            
+            cp1X = prev.x;
+            cp1Y = prev.y + tension1; // Pulling straight down from previous node
+            cp2X = x;
+            cp2Y = currentY - tension2; // Pulling straight up from current node
+        }
+
+        newLayout.push({ x, y: currentY, cp1X, cp1Y, cp2X, cp2Y });
+    }
+    
+    setLayoutConfig(newLayout);
+    if (newLayout.length > 0) {
+        setContainerHeight(newLayout[newLayout.length - 1].y + 240);
+    } else {
+        setContainerHeight(500);
+    }
+  }, [activeDay, itemCount]);
+
+  useEffect(() => {
+    if (layoutConfig.length === 0) return;
+    
+    const logo = document.getElementById('timeline-logo');
+    const path = document.querySelector('.zigzag-path-line') as SVGPathElement;
+    const map = containerRef.current;
+
+    if (!logo || !path || !map) return;
+
+    let rafId: number;
+    let pathLength = 0;
+    let currentPercent = -1;
+
+    try {
+      pathLength = path.getTotalLength();
+    } catch (e) { return; }
+
+    const svg = path.ownerSVGElement;
+    if (!svg) return;
+
+    const moveLogo = () => {
+      const mapRect = map.getBoundingClientRect();
+      const windowH = window.innerHeight;
+      const centerY = windowH / 2;
+
+      let targetPercent = (centerY - mapRect.top) / mapRect.height;
+      targetPercent = Math.max(0, Math.min(1, targetPercent));
+
+      if (currentPercent === -1) {
+        currentPercent = targetPercent;
+      }
+
+      currentPercent += (targetPercent - currentPercent) * 0.08;
+
+      if (svg && svg.viewBox.baseVal.width > 0) {
+        const pos = path.getPointAtLength(currentPercent * pathLength);
+        const x = pos.x * (map.clientWidth / svg.viewBox.baseVal.width);
+        const y = pos.y * (map.clientHeight / svg.viewBox.baseVal.height);
+
+        logo.style.left = `${x}px`;
+        logo.style.top = `${y}px`;
+
+        const neonPath = document.getElementById('neon-path-line');
+        if (neonPath) {
+          neonPath.style.strokeDasharray = String(pathLength);
+          neonPath.style.strokeDashoffset = String(pathLength - currentPercent * pathLength);
+        }
+
+        const newCrossed = new Set(crossedRef.current);
+        let changed = false;
+        for (let i = 0; i < itemCount; i++) {
+          if (!layoutConfig[i]) continue;
+          const ySvgNode = layoutConfig[i].y;
+          if (pos.y >= ySvgNode - 20) {
+            if (!newCrossed.has(i)) {
+              newCrossed.add(i);
+              changed = true;
+            }
+          }
+        }
+        if (changed) {
+          crossedRef.current = newCrossed;
+          setCrossedNodes(newCrossed);
+        }
+
+        if (Math.random() > 0.5) {
+          const particle = document.createElement('div');
+          particle.className = "absolute w-1.5 h-1.5 rounded-full pointer-events-none z-20";
+          particle.style.backgroundColor = Math.random() > 0.5 ? '#ffd700' : '#9333ea';
+          particle.style.boxShadow = `0 0 8px ${particle.style.backgroundColor}`;
+          particle.style.left = `${x + (Math.random() * 12 - 6)}px`;
+          particle.style.top = `${y + (Math.random() * 12 - 6)}px`;
+          particle.style.opacity = "0.8";
+          particle.style.transition = "all 0.8s cubic-bezier(0.1, 0.8, 0.3, 1)";
+          particle.style.transform = "translate(-50%, -50%) scale(1)";
+
+          map.appendChild(particle);
+
+          requestAnimationFrame(() => {
+            particle.style.transform = `translate(-50%, calc(-50% - ${20 + Math.random() * 40}px)) scale(0)`;
+            particle.style.opacity = "0";
+          });
+
+          setTimeout(() => {
+            if (map.contains(particle)) {
+              map.removeChild(particle);
+            }
+          }, 800);
+        }
+      }
+
+      rafId = requestAnimationFrame(moveLogo);
+    };
+
+    rafId = requestAnimationFrame(moveLogo);
+
+    return () => cancelAnimationFrame(rafId);
+  }, [activeDay, itemCount, layoutConfig]);
 
   return (
     <PageTransition>
@@ -202,41 +498,59 @@ const Schedule = () => {
         <ScrollProgress />
         <Navbar />
 
-        <section className="relative min-h-[50vh] flex items-center justify-center pt-16">
-          <div className="container mx-auto px-4 text-center relative z-10">
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-sm text-primary uppercase tracking-[0.3em] mb-4"
-            >
-              Plan Your Day
-            </motion.p>
-            <motion.h1
-              initial={{ opacity: 0, y: 40 }}
+        <section className="relative min-h-[40vh] flex items-center justify-center pt-24 pb-12">
+          <div className="container mx-auto px-4 text-center relative z-10 flex flex-col items-center">
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="font-heading text-5xl md:text-7xl font-bold mb-6"
+              className="flex items-center gap-2 text-[10px] md:text-xs text-[#ffd700] uppercase tracking-[0.4em] mb-4 font-semibold font-mono"
             >
-              Event <span className="gradient-text">Schedule</span>
-            </motion.h1>
+              <Calendar size={14} className="text-[#ffd700]" /> MASTER PLAN
+            </motion.div>
+
+            <div className="relative inline-block mb-3 px-4 sm:px-6">
+              {/* Futuristic Cyber brackets */}
+              <div className="absolute left-0 -top-2 w-3 h-3 border-t-2 border-l-2 border-[#9333ea]/50" />
+              <div className="absolute right-0 -top-2 w-3 h-3 border-t-2 border-r-2 border-[#9333ea]/50" />
+              <div className="absolute left-0 -bottom-2 w-3 h-3 border-b-2 border-l-2 border-[#9333ea]/50" />
+              <div className="absolute right-0 -bottom-2 w-3 h-3 border-b-2 border-r-2 border-[#9333ea]/50" />
+
+              <h1 className="font-heading text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black tracking-wider uppercase mb-0">
+                <span className="text-white/40 font-light mr-3 sm:mr-4 select-none">
+                  EVENT
+                </span>
+                <span className="bg-gradient-to-r from-[#ffd700] via-[#9333ea] to-[#e9d5ff] bg-clip-text text-transparent drop-shadow-[0_0_20px_rgba(255,215,0,0.4)] animate-pulse">
+                  SCHEDULE
+                </span>
+              </h1>
+            </div>
+
+            <motion.p
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, duration: 0.5 }}
+              className="mt-4 sm:mt-6 text-muted-foreground max-w-lg mx-auto font-mono text-xs sm:text-sm text-center"
+            >
+              Plan your day and explore the exciting lineup of events at Ignitia 2k26.
+            </motion.p>
           </div>
         </section>
 
-        <section className="section-padding">
-          <div className="container mx-auto max-w-4xl">
+        <section className="pb-24">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             {/* Day tabs */}
-            <div className="flex justify-center gap-4 mb-12">
+            <div className="flex justify-center gap-4 mb-16 relative z-20">
               {days.map((day) => (
                 <motion.button
                   key={day}
                   onClick={() => setActiveDay(day)}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className={`px-6 py-3 rounded-lg font-heading font-semibold text-sm transition-all ${
-                    activeDay === day
-                      ? "glow-button"
-                      : "glass-card text-muted-foreground hover:text-foreground"
-                  }`}
+                  className={`px-6 py-3 rounded-lg font-heading font-semibold text-sm transition-all ${activeDay === day
+                    ? "bg-[#9333ea]/20 border border-[#9333ea]/50 text-[#e9d5ff] shadow-[0_0_15px_rgba(147,51,234,0.3)]"
+                    : "bg-white/5 border border-white/10 text-muted-foreground hover:text-white"
+                    }`}
                 >
                   <Calendar size={14} className="inline mr-2" />
                   {day}
@@ -244,27 +558,49 @@ const Schedule = () => {
               ))}
             </div>
 
-            {/* Timeline */}
-            <div ref={timelineRef} className="relative">
-              {/* Animated center line */}
-              <div className="absolute left-[21px] md:left-1/2 top-0 bottom-0 w-[2px] bg-muted">
-                <motion.div
-                  className="w-full bg-gradient-to-b from-primary via-neon-cyan to-secondary"
-                  style={{ height: lineHeight }}
-                />
-              </div>
+            {/* Zigzag Map Container */}
+            <div ref={containerRef} className="relative w-full max-w-4xl mx-auto zigzag-map" style={{ height: `${containerHeight}px` }}>
+              <SvgPath layout={layoutConfig} totalH={containerHeight} />
 
-              <div className="space-y-6 md:space-y-8">
-                {schedule[activeDay as keyof typeof schedule].map((item, i) => (
-                  <TimelineItem
-                    key={item.title}
-                    item={item}
-                    index={i}
-                    isLeft={i % 2 === 0}
-                  />
-                ))}
-              </div>
+              <img
+                id="timeline-logo"
+                src="/phoenix-logo.png"
+                alt="Cyber Phoenix Logo"
+                className="absolute z-30 pointer-events-none w-10 h-10 object-contain rounded-full bg-[#0b0614] p-1 border-2 border-[#9333ea] shadow-[0_0_15px_rgba(147,51,234,0.6)]"
+                style={{ transform: 'translate(-50%, -50%)', top: 0, left: '50%' }}
+                onError={(e) => {
+                  // Fallback if image doesn't exist
+                  e.currentTarget.style.display = 'none';
+                  const fallback = document.createElement('div');
+                  fallback.className = "absolute z-30 pointer-events-none w-8 h-8 rounded-full bg-[#9333ea] border-2 border-white shadow-[0_0_15px_rgba(147,51,234,0.6)] animate-pulse";
+                  fallback.style.transform = 'translate(-50%, -50%)';
+                  fallback.id = "timeline-logo";
+                  e.currentTarget.parentElement?.appendChild(fallback);
+                }}
+              />
+
+              {layoutConfig.length > 0 && currentItems.map((item, i) => (
+                <ZigzagNode
+                  key={item.title}
+                  item={item}
+                  index={i}
+                  isRight={i % 2 !== 0}
+                  totalH={containerHeight}
+                  isCrossed={crossedNodes.has(i)}
+                  nodeConfig={layoutConfig[i]}
+                />
+              ))}
             </div>
+
+            {/* Download CTA at bottom */}
+            <div className="text-center mt-24 relative z-20">
+              <a href="#"
+                className="px-8 py-4 rounded-2xl bg-gradient-to-r from-primary to-secondary hover:shadow-[0_0_30px_rgba(47,143,163,0.5)] transition-all duration-300 font-heading font-bold text-sm uppercase tracking-wider text-white inline-flex items-center gap-3 group">
+                <span>Download Full Schedule</span>
+                <i className="fas fa-arrow-right transform group-hover:translate-x-1 transition-transform"></i>
+              </a>
+            </div>
+
           </div>
         </section>
         <Footer />
