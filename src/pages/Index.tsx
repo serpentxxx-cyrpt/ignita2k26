@@ -84,11 +84,11 @@ const Index = () => {
         <main className="flex-1 relative z-10">
           {/* Handles full 3D interactive zoom with intro.glb */}
           <HeroSection />
-          
+
           {/* Below sections flow up naturally following pin completion */}
           <div className="relative bg-[#050406] z-20">
             {/* Highlights removed */}
-            
+
             {/* Model 2 - Pinned Telemetry Character Hero Showcase Section */}
             <section
               id="character-showcase-section"
@@ -165,9 +165,9 @@ const Index = () => {
                     <div className="space-y-3 pt-1">
                       {[
                         { label: "PRIZE POOL", value: "₹2,00,000+", pct: 90, color: "from-secondary to-yellow-400" },
-                        { label: "FOOTFALL",   value: "5000+",      pct: 85, color: "from-primary to-purple-400" },
+                        { label: "FOOTFALL", value: "5000+", pct: 85, color: "from-primary to-purple-400" },
                         { label: "COLLABORATORS", value: "50+ Colleges", pct: 75, color: "from-neon-cyan to-teal-400" },
-                        { label: "ARENAS",     value: "7+",         pct: 55, color: "from-pink-500 to-primary" },
+                        { label: "ARENAS", value: "7+", pct: 55, color: "from-pink-500 to-primary" },
                       ].map(({ label, value, pct, color }) => (
                         <div key={label} className="space-y-1">
                           <div className="flex justify-between items-baseline">
@@ -201,9 +201,9 @@ const Index = () => {
             </section>
 
             {/* Removed WhyAttend, FAQ, and Sponsors */}
-            
+
             <div className="w-full h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
-            
+
             <CTABanner />
 
             {/* Event Map Location Embed */}
@@ -238,4 +238,4 @@ const Index = () => {
   );
 };
 
-export default Index;
+export default Index;
